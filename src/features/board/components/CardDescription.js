@@ -1,79 +1,82 @@
 import { Button } from 'antd';
-import React, { Component } from 'react';
+import { useState } from 'react';
 import styled from 'styled-components';
 import { Detail, SaveButton, StyledTextArea } from '../styles';
 
-export class CardDescription extends Component {
-    state = {
+export function CardDescription(props) {
+    const [state, setState] = useState({
         description: '',
         editMode: false,
-    };
+    });
 
-    handleEnableEditMode = () => {
-        const { description } = this.props.card;
-        this.setState({
+    const handleEnableEditMode = () => {
+        const { description } = props.card;
+        setState({
             description,
             editMode: true,
         });
     };
 
-    handleDisableEditMode = () => {
-        this.setState({
+    const handleDisableEditMode = () => {
+        setState((prvsState) => ({
+            description: prvsState.description,
             editMode: false,
-        });
+        }));
     };
 
-    handleSubmitForm = (event, callback, listKey, cardKey, card) => {
+    const handleSubmitForm = (event, callback, listKey, cardKey, card) => {
         event.preventDefault();
 
-        callback(listKey, cardKey, { ...card, description: this.state.description }).then(() => {
-            this.handleDisableEditMode();
+        callback(listKey, cardKey, { ...card, description: state.description }).then(() => {
+            handleDisableEditMode();
         });
     };
 
-    handleDescriptionChange = (event) => {
-        this.setState({ description: event.target.value });
+    const handleDescriptionChange = (event) => {
+        setState((prvsState) => ({
+            description: event.target.value,
+            editMode: prvsState.editMode,
+        }));
     };
 
-    render() {
-        const { editMode } = this.state;
-        const { listKey, card, onEditCard } = this.props;
-        const isValid = this.state.description;
-        return (
-            <div>
-                {editMode ? (
-                    <form
-                        onSubmit={(event) =>
-                            this.handleSubmitForm(event, onEditCard, listKey, card.key, card)
+    const { editMode } = state;
+    const { listKey, card, onEditCard } = props;
+    const isValid = state.description;
+
+    return (
+        <div>
+            {editMode ? (
+                <form
+                    onSubmit={(event) =>
+                        handleSubmitForm(event, onEditCard, listKey, card.key, card)
+                    }
+                >
+                    <StyledTextArea
+                        onChange={(event) => handleDescriptionChange(event)}
+                        value={state.description}
+                        autoSize
+                    />
+                    <SaveButton
+                        disabled={!isValid}
+                        onClick={(event) =>
+                            handleSubmitForm(event, onEditCard, listKey, card.key, card)
                         }
                     >
-                        <StyledTextArea
-                            onChange={(event) => this.handleDescriptionChange(event)}
-                            value={this.state.description}
-                            autoSize
-                        />
-                        <SaveButton
-                            disabled={!isValid}
-                            onClick={(event) =>
-                                this.handleSubmitForm(event, onEditCard, listKey, card.key, card)
-                            }
-                        >
-                            Save
-                        </SaveButton>
-                        <Button onClick={this.handleDisableEditMode}>Cancel</Button>
-                    </form>
-                ) : (
-                    <DescriptionPlaceholder onClick={this.handleEnableEditMode}>
-                        {card.description ? (
-                            <span>{card.description}</span>
-                        ) : (
-                            <Detail>Add a more detailed description...</Detail>
-                        )}
-                    </DescriptionPlaceholder>
-                )}
-            </div>
-        );
-    }
+                        Save
+                    </SaveButton>
+                    <Button onClick={handleDisableEditMode}>Cancel</Button>
+                </form>
+            ) : (
+                <DescriptionPlaceholder onClick={handleEnableEditMode}>
+                    {card.description ? (
+                        <span>{card.description}</span>
+                    ) : (
+                        <Detail>Add a more detailed description...</Detail>
+                    )}
+                </DescriptionPlaceholder>
+            )}
+        </div>
+    );
 }
 
 const DescriptionPlaceholder = styled.div``;
